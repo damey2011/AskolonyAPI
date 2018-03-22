@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from Account.serializers import RetrieveUpdateDeleteUserSerializer
 from Post.models import Post, PostFollow, Comment, PostUpvote, PostDownvote, StarredPost, FlaggedComment, FlaggedPost, \
-    StarredComment
+    StarredComment, CommentUpvote, CommentDownvote
 
 
 class CreatePostSerializer(serializers.ModelSerializer):
@@ -112,7 +112,25 @@ class PostFollowSerializer(serializers.ModelSerializer):
         return RetrieveUpdateDeleteUserSerializer(obj.user).data
 
 
-class ListCreateCommentSerializer(serializers.ModelSerializer):
+class ListCommentSerializer(serializers.ModelSerializer):
+    user = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Comment
+        fields = (
+            'id',
+            'user',
+            'body',
+            'ups',
+            'downs',
+            'created'
+        )
+
+    def get_user(self, obj):
+        return RetrieveUpdateDeleteUserSerializer(obj.user).data
+
+
+class CreateCommentSerializer(serializers.ModelSerializer):
     parent_post = serializers.SerializerMethodField()
     parent_comment = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
@@ -137,7 +155,7 @@ class ListCreateCommentSerializer(serializers.ModelSerializer):
 
     def get_parent_comment(self, obj):
         if obj.parent_comment is not None:
-            return ListCreateCommentSerializer(obj.parent_comment).data
+            return ListCommentSerializer(obj.parent_comment).data
         return None
 
     def get_user(self, obj):
@@ -145,7 +163,7 @@ class ListCreateCommentSerializer(serializers.ModelSerializer):
 
 
 class PostUpvoteSerializer(serializers.ModelSerializer):
-    post = RetrieveUpdateDestroyPostSerializer(required=False)
+    post = RetrieveUpdateDestroyPostSerializer(required=False, write_only=True)
     user = RetrieveUpdateDeleteUserSerializer(required=False)
 
     class Meta:
@@ -159,7 +177,7 @@ class PostUpvoteSerializer(serializers.ModelSerializer):
 
 
 class PostDownvoteSerializer(serializers.ModelSerializer):
-    post = RetrieveUpdateDestroyPostSerializer(required=False)
+    post = RetrieveUpdateDestroyPostSerializer(required=False, write_only=True)
     user = RetrieveUpdateDeleteUserSerializer(required=False)
 
     class Meta:
@@ -173,7 +191,7 @@ class PostDownvoteSerializer(serializers.ModelSerializer):
 
 
 class StarredPostSerializer(serializers.ModelSerializer):
-    post = RetrieveUpdateDestroyPostSerializer(required=False)
+    post = RetrieveUpdateDestroyPostSerializer(required=False, write_only=True)
     user = RetrieveUpdateDeleteUserSerializer(required=False)
 
     class Meta:
@@ -186,15 +204,52 @@ class StarredPostSerializer(serializers.ModelSerializer):
         )
 
 
+class CreateCommentUpvoteSerializer(serializers.ModelSerializer):
+    user = RetrieveUpdateDeleteUserSerializer(required=False)
+
+    class Meta:
+        model = CommentUpvote
+        fields = (
+            'id',
+            'comment',
+            'user',
+            'created'
+        )
+
+
+class CreateCommentDownvoteSerializer(serializers.ModelSerializer):
+    user = RetrieveUpdateDeleteUserSerializer(required=False)
+
+    class Meta:
+        model = CommentDownvote
+        fields = (
+            'id',
+            'comment',
+            'user',
+            'created'
+        )
+
+
+class ListCommentUpvoteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CommentUpvote
+        fields = (
+            'user',
+        )
+
+    def to_representation(self, instance):
+        return RetrieveUpdateDeleteUserSerializer(instance.user).data
+
+
 class StarredCommentSerializer(serializers.ModelSerializer):
-    post = RetrieveUpdateDestroyPostSerializer(required=False)
+    comment = ListCommentSerializer(required=False)
     user = RetrieveUpdateDeleteUserSerializer(required=False)
 
     class Meta:
         model = StarredComment
         fields = (
             'id',
-            'post',
+            'comment',
             'user',
             'created'
         )
@@ -230,3 +285,48 @@ class FlaggedCommentSerializer(serializers.ModelSerializer):
             'action_taken',
             'created'
         )
+
+
+class MyFollowedPostsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PostFollow
+        fields = (
+            'post'
+        )
+
+    def to_representation(self, instance):
+        return RetrieveUpdateDestroyPostSerializer(instance.post).data
+
+
+class MyStarredPostsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StarredPost
+        fields = (
+            'post'
+        )
+
+    def to_representation(self, instance):
+        return RetrieveUpdateDestroyPostSerializer(instance.post).data
+
+
+class MyUpvotedPostsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PostUpvote
+        fields = (
+            'post'
+        )
+
+    def to_representation(self, instance):
+        return RetrieveUpdateDestroyPostSerializer(instance.post).data
+
+
+class MyUpvotedCommentsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CommentUpvote
+        fields = (
+            'comment'
+        )
+
+    def to_representation(self, instance):
+        return ListCommentSerializer(instance.comment).data
+

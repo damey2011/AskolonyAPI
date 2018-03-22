@@ -33,7 +33,7 @@ class ListCreateDestroyFollowTopic(ListCreateAPIView, DestroyModelMixin):
     permission_classes = (IsAuthenticatedOrReadOnly,)
 
     def get_queryset(self):
-        return TopicFollowing.objects.filter(topic_id=self.kwargs.get('pk'))
+        return TopicFollowing.objects.filter(user=self.request.user, topic_id=self.kwargs.get('pk'))
 
     def delete(self, request, *args, **kwargs):
         topic_id = self.kwargs.get('pk')

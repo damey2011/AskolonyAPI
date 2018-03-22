@@ -9,6 +9,7 @@ from rest_framework.test import APIClient, APITestCase
 from rest_framework.utils import json
 
 from Account.models import UserFollowings
+from Post.models import Post, PostFollow
 
 User = get_user_model()
 
@@ -69,11 +70,21 @@ class AccountRetrieveTestCases(TestCase):
         self.user.set_password = 'nifemi3'
         self.user.save()
 
+        self.client = APIClient()
+        self.token = Token.objects.get(user=self.user).key
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token)
+
     def test_can_get_valid_account(self):
         user = User.objects.filter().first()
         url = reverse('get-user', kwargs={'username': user.username})
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_can_get_self_account(self):
+        url = reverse('get-me')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('username'), 'oluwanifemi')
 
     def test_cannot_get_invalid_account(self):
         jargon = 'fdkofsngjnsjfn'
@@ -194,6 +205,8 @@ class AccountFollowTestCases(TestCase):
 
         self.follow_url = reverse('follow-user', kwargs={'username': self.damey2011.username})
 
+        UserFollowings.objects.create(user=self.oluwanifemi, is_following=self.damey2011)
+
     """Test for oluwanifemi to follow damey2011"""
 
     def test_authenticated_follow(self):
@@ -201,6 +214,7 @@ class AccountFollowTestCases(TestCase):
         self.client.credentials(HTTP_AUTHORIZATION="Token " + token)
         response = self.client.post(self.follow_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(UserFollowings.objects.all().count(), 1)
 
     def test_unauthenticated_follow(self):
         response = self.client.post(self.follow_url)
@@ -211,6 +225,16 @@ class AccountFollowTestCases(TestCase):
         self.client.credentials(HTTP_AUTHORIZATION="Token " + token)
         response = self.client.post(reverse('follow-user', kwargs={'username': self.oluwanifemi.username}))
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_retrieve_user_followers(self):
+        response = self.client.get(reverse('list-user-followers', kwargs={'username': self.damey2011.username}))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('count'), 1)
+
+    def test_retrieve_user_followings(self):
+        response = self.client.get(reverse('list-user-followings', kwargs={'username': self.oluwanifemi.username}))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('count'), 1)
 
 
 class AccountUnFollowTestCases(TestCase):
@@ -227,16 +251,74 @@ class AccountUnFollowTestCases(TestCase):
 
         self.client = APIClient()
 
-        self.unfollow_url = reverse('unfollow-user', kwargs={'username': self.damey2011.username})
+        self.unfollow_url = reverse('follow-user', kwargs={'username': self.damey2011.username})
 
     """Test for oluwanifemi to follow damey2011"""
 
     def test_authenticated_unfollow(self):
         token = Token.objects.get(user=self.oluwanifemi).key
         self.client.credentials(HTTP_AUTHORIZATION="Token " + token)
-        response = self.client.post(self.unfollow_url)
+        response = self.client.delete(self.unfollow_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_unauthenticated_unfollow(self):
-        response = self.client.post(self.unfollow_url)
+        response = self.client.delete(self.unfollow_url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class RetrieveUsersFollowedPostTestCases(TestCase):
+    def setUp(self):
+        self.oluwanifemi = User.objects.create(username='oluwanifemi', email='neefemee@gmail.com')
+        self.oluwanifemi.set_password = 'nifemi3'
+        self.oluwanifemi.save()
+
+        self.damey2011 = User.objects.create(username='damey2011', email='adeyemidamilola3@gmail.com')
+        self.damey2011.set_password = 'nifemi3'
+        self.damey2011.save()
+
+        p = Post.objects.create(title='Hello', content='bla bla bla', user=self.oluwanifemi)
+        p = Post.objects.create(title='Hello', content='bla bla bla', user=self.damey2011)
+
+        PostFollow.objects.create(user=self.oluwanifemi, post=p)
+        PostFollow.objects.create(user=self.damey2011, post=p)
+
+        self.client = APIClient()
+        token = Token.objects.get(user=self.oluwanifemi).key
+        self.client.credentials(HTTP_AUTHORIZATION="Token " + token)
+
+        self.get_oluwanifemi_posts_url = reverse('list-my-followed-posts')
+
+    def test_oluwanifemi_can_retrieve_his_followed_posts(self):
+        response = self.client.get(self.get_oluwanifemi_posts_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('count'), 1)
+
+
+class RetrieveUserCreatedPostTestCases(TestCase):
+    def setUp(self):
+        self.oluwanifemi = User.objects.create(username='oluwanifemi', email='neefemee@gmail.com')
+        self.oluwanifemi.set_password = 'nifemi3'
+        self.oluwanifemi.save()
+
+        self.damey2011 = User.objects.create(username='damey2011', email='adeyemidamilola3@gmail.com')
+        self.damey2011.set_password = 'nifemi3'
+        self.damey2011.save()
+
+        Post.objects.create(title='Hello', content='bla bla bla', user=self.damey2011)
+        Post.objects.create(title='Hello', content='bla bla bla', user=self.oluwanifemi)
+
+        self.client = APIClient()
+        token = Token.objects.get(user=self.oluwanifemi).key
+        self.client.credentials(HTTP_AUTHORIZATION="Token " + token)
+
+        self.get_oluwanifemi_posts_url = reverse('list-user-posts', kwargs={'username': self.oluwanifemi.username})
+
+    def test_can_retrieve_oluwanifemi_posts(self):
+        response = self.client.get(self.get_oluwanifemi_posts_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('count'), 1)
+
+    def test_can_retrieve_oluwanifemi_polls(self):
+        list_polls_url = reverse('list-my-polls')
+        response = self.client.get(list_polls_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

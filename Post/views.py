@@ -1,24 +1,25 @@
 from django.http import JsonResponse
 from rest_framework import status
-from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView, DestroyAPIView
+from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView, DestroyAPIView, CreateAPIView
 from rest_framework.mixins import DestroyModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from Post.models import Post, PostFollow, Comment, PostUpvote, PostDownvote, StarredPost, FlaggedPost, StarredComment, \
-    FlaggedComment
+    FlaggedComment, CommentUpvote
 from Post.paginations import PostPagination, PostFollowPagination, PostCommentPagination, PostVotePagination, \
     StarredPostPagination, FlaggedPostPagination
 from Post.permissions import PostPermission, IsAuthenticatedOrReadOnly
 from Post.serializers import CreatePostSerializer, RetrieveUpdateDestroyPostSerializer, PostFollowSerializer, \
-    ListCreateCommentSerializer, PostUpvoteSerializer, PostDownvoteSerializer, StarredPostSerializer, \
-    FlaggedPostSerializer, StarredCommentSerializer, FlaggedCommentSerializer
+    PostUpvoteSerializer, PostDownvoteSerializer, StarredPostSerializer, \
+    FlaggedPostSerializer, StarredCommentSerializer, FlaggedCommentSerializer, ListCommentUpvoteSerializer, \
+    CreateCommentUpvoteSerializer, CreateCommentDownvoteSerializer, ListCommentSerializer, CreateCommentSerializer
 
 
 class RetrieveCreatePosts(ListCreateAPIView):
     """List and Create a new Post"""
-    queryset = Post.objects.all()
+    queryset = Post.objects.all().order_by('-created')
     serializer_class = CreatePostSerializer
     pagination_class = PostPagination
     permission_classes = (IsAuthenticatedOrReadOnly,)
@@ -29,7 +30,7 @@ class RetrieveCreatePosts(ListCreateAPIView):
 
 class RetrieveUpdateDestroyPost(RetrieveUpdateDestroyAPIView):
     """Retrieve Update and Delete Post"""
-    queryset = Post.objects.filter()
+    queryset = Post.objects.all()
     serializer_class = RetrieveUpdateDestroyPostSerializer
     permission_classes = (IsAuthenticated, PostPermission)
 
@@ -40,7 +41,7 @@ class ListCreateDestroyPostFollow(ListCreateAPIView, DestroyModelMixin):
     permission_classes = (IsAuthenticatedOrReadOnly,)
 
     def get_queryset(self):
-        return PostFollow.objects.filter(topic_id=self.kwargs.get('pk'))
+        return PostFollow.objects.filter(topic_id=self.kwargs.get('pk')).order_by('-created')
 
     def delete(self, request, *args, **kwargs):
         post_id = self.kwargs.get('pk')
@@ -87,9 +88,14 @@ class ListCreateDestroyPostFollow(ListCreateAPIView, DestroyModelMixin):
 
 class ListCreatePostComment(ListCreateAPIView):
     def get_queryset(self):
-        return Comment.objects.filter(parent_post_id=self.kwargs.get('parent_post_id'))
+        return Comment.objects.filter(parent_post_id=self.kwargs.get('parent_post_id')).order_by('-created')
 
-    serializer_class = ListCreateCommentSerializer
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return ListCommentSerializer
+        else:
+            return CreateCommentSerializer
+
     pagination_class = PostCommentPagination
     permission_classes = (IsAuthenticatedOrReadOnly,)
 
@@ -100,9 +106,14 @@ class ListCreatePostComment(ListCreateAPIView):
 class ListCreateCommentComment(ListCreateAPIView):
     def get_queryset(self):
         return Comment.objects.filter(parent_comment_id=self.kwargs.get('parent_comment_id'),
-                                      parent_post_id=self.kwargs.get('parent_post_id'))
+                                      parent_post_id=self.kwargs.get('parent_post_id')).order_by('-created')
 
-    serializer_class = ListCreateCommentSerializer
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return ListCommentSerializer
+        else:
+            return CreateCommentSerializer
+
     pagination_class = PostCommentPagination
     permission_classes = (IsAuthenticatedOrReadOnly,)
 
@@ -116,7 +127,7 @@ class RetrieveUpdateDeleteComment(RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         return Comment.objects.filter(pk=self.kwargs.get('pk'))
 
-    serializer_class = ListCreateCommentSerializer
+    serializer_class = ListCommentSerializer
     permission_classes = (IsAuthenticated, PostPermission,)
     lookup_field = 'pk'
 
@@ -127,7 +138,7 @@ class ListCreatePostUpvote(ListCreateAPIView):
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
-        return PostUpvote.objects.filter(post_id=self.kwargs.get('pk'))
+        return PostUpvote.objects.filter(post_id=self.kwargs.get('pk')).order_by('-created')
 
     def post(self, request, *args, **kwargs):
         """TO whom it may concern, we are overriding the post method in other to check and avoid multiple upvotes"""
@@ -156,7 +167,7 @@ class ListCreatePostDownvote(ListCreateAPIView):
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
-        return PostDownvote.objects.filter(post_id=self.kwargs.get('pk'))
+        return PostDownvote.objects.filter(post_id=self.kwargs.get('pk')).order_by('-created')
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user, post_id=self.kwargs.get('pk'))
@@ -188,7 +199,7 @@ class ListCreateDeleteStarPost(ListCreateAPIView):
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
-        return StarredPost.objects.filter(post_id=self.kwargs.get('pk'))
+        return StarredPost.objects.filter(post_id=self.kwargs.get('pk')).order_by('-created')
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user, post_id=self.kwargs.get('pk'))
@@ -219,7 +230,7 @@ class ListCreateDeleteFlagPost(ListCreateAPIView):
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
-        return FlaggedPost.objects.filter(post_id=self.kwargs.get('pk'))
+        return FlaggedPost.objects.filter(post_id=self.kwargs.get('pk')).order_by('-created')
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user, post_id=self.kwargs.get('pk'))
@@ -250,7 +261,7 @@ class ListCreateDeleteStarComment(ListCreateAPIView):
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
-        return StarredComment.objects.filter(comment_id=self.kwargs.get('pk'))
+        return StarredComment.objects.filter(comment_id=self.kwargs.get('pk')).order_by('-created')
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user, comment_id=self.kwargs.get('pk'))
@@ -281,7 +292,7 @@ class ListCreateDeleteFlagComment(ListCreateAPIView):
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
-        return FlaggedComment.objects.filter(comment_id=self.kwargs.get('pk'))
+        return FlaggedComment.objects.filter(comment_id=self.kwargs.get('pk')).order_by('-created')
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user, comment_id=self.kwargs.get('pk'))
@@ -304,3 +315,32 @@ class ListCreateDeleteFlagComment(ListCreateAPIView):
         if flagged_comment.exists():
             flagged_comment.delete()
         return Response(status=204)
+
+
+class ListCreateDeleteCommentUpvote(ListCreateAPIView):
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return ListCommentUpvoteSerializer
+        else:
+            return CreateCommentUpvoteSerializer
+
+    pagination_class = PostCommentPagination
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        return CommentUpvote.objects.all()
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
+class ListCreateDeleteCommentDownvote(ListCreateAPIView):
+    serializer_class = CreateCommentDownvoteSerializer
+    pagination_class = PostCommentPagination
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        return CommentUpvote.objects.all()
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)

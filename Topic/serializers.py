@@ -39,3 +39,13 @@ class TopicFollowSerializer(serializers.ModelSerializer):
             'user',
             'topic'
         )
+
+
+class TopicFollowedByUserSerializer(serializers.ModelSerializer):
+    topic = TopicSerializer()
+
+    class Meta:
+        model = TopicFollowing
+        fields = (
+            'topic'
+        )

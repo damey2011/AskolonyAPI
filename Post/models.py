@@ -1,3 +1,6 @@
+import random
+import string
+
 from django.db import models
 from functools import reduce
 
@@ -35,7 +38,7 @@ class Post(models.Model):
 
     def save(self, *args, **kwargs):
         if self.pk is None:
-            self.slug = slugify(self.title)[:40]
+            self.slug = slugify(self.title + ' '.join(random.choices(string.ascii_uppercase + string.digits, k=5)))[:40]
         self.excerpt = reduce(lambda excerpt, next_item: excerpt + ' ' + next_item, self.content.split(' ')[:15])
         super(Post, self).save(*args, **kwargs)
 
@@ -91,7 +94,7 @@ class Comment(models.Model):
         return self.parent_post.title
 
 
-class CommentUpvotes(models.Model):
+class CommentUpvote(models.Model):
     comment = models.ForeignKey(Comment, on_delete=models.CASCADE, related_name='upvotes')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     created = models.DateTimeField(auto_now_add=True)

@@ -1,10 +1,11 @@
 import uuid
 
 from django.contrib.auth import get_user_model
+from django.db import connection
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from Account.models import UserProfile, UserStats
+from Account.models import UserProfile, UserStats, UserFollowings
 
 User = get_user_model()
 
@@ -135,3 +136,44 @@ class RetrieveUpdateDeleteUserSerializer(serializers.ModelSerializer):
         profile.save()
 
         return instance
+
+
+class SimpleNoEmailUserSerializer(serializers.ModelSerializer):
+    full_name = serializers.CharField(source='get_full_name', read_only=True)
+
+    class Meta:
+        model = User
+        fields = (
+            'id',
+            'first_name',
+            'last_name',
+            'full_name',
+            'username',
+            'bio'
+        )
+
+
+class FollowerSerializer(serializers.ModelSerializer):
+    user = RetrieveUpdateDeleteUserSerializer()
+
+    class Meta:
+        model = UserFollowings
+        fields = (
+            'user',
+        )
+
+    def to_representation(self, instance):
+        return SimpleNoEmailUserSerializer(instance.user).data
+
+
+class FollowingSerializer(serializers.ModelSerializer):
+    is_following = RetrieveUpdateDeleteUserSerializer()
+
+    class Meta:
+        model = UserFollowings
+        fields = (
+            'is_following',
+        )
+
+    def to_representation(self, instance):
+        return SimpleNoEmailUserSerializer(instance.is_following).data
