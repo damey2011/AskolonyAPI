@@ -10,6 +10,7 @@ from Topic.serializers import TopicSerializer, TopicFollowSerializer
 
 
 class ListCreateTopic(ListCreateAPIView):
+    """Create and list all topics"""
     queryset = Topic.objects.all()
     serializer_class = TopicSerializer
     pagination_class = TopicPagination
@@ -20,6 +21,7 @@ class ListCreateTopic(ListCreateAPIView):
 
 
 class RetrieveUpdateDeleteTopic(RetrieveUpdateDestroyAPIView):
+    """Retrieve Update and Delete Topic"""
     serializer_class = TopicSerializer
     permission_classes = (IsAuthenticated,)
 
@@ -28,6 +30,7 @@ class RetrieveUpdateDeleteTopic(RetrieveUpdateDestroyAPIView):
 
 
 class ListCreateDestroyFollowTopic(ListCreateAPIView, DestroyModelMixin):
+    """List Follows of a topic, follow and unfollow same topic"""
     serializer_class = TopicFollowSerializer
     pagination_class = TopicPagination
     permission_classes = (IsAuthenticatedOrReadOnly,)

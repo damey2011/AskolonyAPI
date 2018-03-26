@@ -1,14 +1,19 @@
 from rest_framework import serializers
 
-from Account.serializers import RetrieveUpdateDeleteUserSerializer
+from Account.serializers import RetrieveUpdateDeleteUserSerializer, SimpleNoEmailUserSerializer
 from Post.models import Post, PostFollow, Comment, PostUpvote, PostDownvote, StarredPost, FlaggedComment, FlaggedPost, \
-    StarredComment, CommentUpvote, CommentDownvote
+    StarredComment, CommentUpvote, CommentDownvote, ReadPost
 
 
 class CreatePostSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
     comments = serializers.CharField(source='get_comments_url', read_only=True)
     comments_count = serializers.CharField(source='get_comments_count', read_only=True)
+    ups = serializers.IntegerField(read_only=True)
+    downs = serializers.IntegerField(read_only=True)
+    followers = serializers.IntegerField(read_only=True)
+    views = serializers.IntegerField(read_only=True)
+    read_time = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Post
@@ -51,6 +56,11 @@ class RetrieveUpdateDestroyPostSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
     comments = serializers.CharField(source='get_comments_url', read_only=True)
     comments_count = serializers.CharField(source='get_comments_count', read_only=True)
+    ups = serializers.IntegerField(read_only=True)
+    downs = serializers.IntegerField(read_only=True)
+    followers = serializers.IntegerField(read_only=True)
+    views = serializers.IntegerField(read_only=True)
+    read_time = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Post
@@ -330,3 +340,35 @@ class MyUpvotedCommentsSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         return ListCommentSerializer(instance.comment).data
 
+
+class PostReadersSerializer(serializers.ModelSerializer):
+    user = RetrieveUpdateDeleteUserSerializer(read_only=True)
+    post = RetrieveUpdateDestroyPostSerializer(read_only=True)
+
+    class Meta:
+        model = ReadPost
+        fields = (
+            'id',
+            'user',
+            'post'
+        )
+
+    def to_representation(self, instance):
+        return SimpleNoEmailUserSerializer(instance.user).data
+
+
+class ReadPostsSerializer(serializers.ModelSerializer):
+    user = RetrieveUpdateDeleteUserSerializer(read_only=True)
+    post = RetrieveUpdateDestroyPostSerializer(read_only=True)
+
+    class Meta:
+        model = ReadPost
+        fields = (
+            'id',
+            'user',
+            'post',
+            'created'
+        )
+
+    def to_representation(self, instance):
+        return RetrieveUpdateDestroyPostSerializer(instance.post).data

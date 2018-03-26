@@ -17,14 +17,20 @@ from django.conf.urls import url
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include
+from rest_framework_swagger.views import get_swagger_view
 
 from AskolonyAPI import settings
 
+schema_view = get_swagger_view("Askolony API Documentation")
+
 urlpatterns = [
+    url(r'^docs/', schema_view),
     url(r'^admin/', admin.site.urls),
-    url(r'^accounts/', include('Account.urls')),
-    url(r'^posts/', include('Post.urls')),
-    url(r'^questions/', include('Questions.urls')),
-    url(r'^topics/', include('Topic.urls')),
-    url(r'^polls/', include('Poll.urls')),
+    url(r'^api/accounts/', include('Account.urls')),
+    url(r'^api/posts/', include('Post.urls')),
+    url(r'^api/questions/', include('Questions.urls')),
+    url(r'^api/topics/', include('Topic.urls')),
+    url(r'^api/polls/', include('Poll.urls')),
+    url(r'^api/messages/', include('Messages.urls')),
+    url(r'^api/notifications/', include('Notification.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

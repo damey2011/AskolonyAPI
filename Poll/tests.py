@@ -7,6 +7,8 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
+from Poll.models import Poll, PollOption
+
 User = get_user_model()
 
 
@@ -32,8 +34,30 @@ class ListCreatePoll(TestCase):
                 {"option": "Damilola Adeyemi"}
             ]
         }
+
+        self.p = Poll.objects.create(user=self.user, title='Title', description='Desc', starts=datetime.now(),
+                                     expires=datetime(2017, 4, 22, 14, 50))
+        self.po = PollOption.objects.create(poll=self.p, option="Damilola")
+        self.po2 = PollOption.objects.create(poll=self.p, option="Nifemi")
+
         self.url = reverse('list-create-poll')
 
     def test_can_create_poll_authenticated(self):
         response = self.client.post(self.url, self.payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_can_vote_authenticated(self):
+        payload = {
+            'option': self.po.id
+        }
+        url = reverse('vote-poll', kwargs={'pk': self.p.id})
+        response = self.client.post(url, payload)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_cannot_vote_unauthenticated(self):
+        payload = {
+            'option': self.po.id
+        }
+        url = reverse('vote-poll', kwargs={'pk': self.p.id})
+        response = APIClient().post(url, payload)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)

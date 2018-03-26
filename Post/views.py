@@ -1,28 +1,35 @@
 from django.http import JsonResponse
 from rest_framework import status
+from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView, DestroyAPIView, CreateAPIView
 from rest_framework.mixins import DestroyModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from Post.models import Post, PostFollow, Comment, PostUpvote, PostDownvote, StarredPost, FlaggedPost, StarredComment, \
-    FlaggedComment, CommentUpvote
+    FlaggedComment, CommentUpvote, ReadPost
 from Post.paginations import PostPagination, PostFollowPagination, PostCommentPagination, PostVotePagination, \
     StarredPostPagination, FlaggedPostPagination
 from Post.permissions import PostPermission, IsAuthenticatedOrReadOnly
 from Post.serializers import CreatePostSerializer, RetrieveUpdateDestroyPostSerializer, PostFollowSerializer, \
     PostUpvoteSerializer, PostDownvoteSerializer, StarredPostSerializer, \
     FlaggedPostSerializer, StarredCommentSerializer, FlaggedCommentSerializer, ListCommentUpvoteSerializer, \
-    CreateCommentUpvoteSerializer, CreateCommentDownvoteSerializer, ListCommentSerializer, CreateCommentSerializer
+    CreateCommentUpvoteSerializer, CreateCommentDownvoteSerializer, ListCommentSerializer, CreateCommentSerializer, \
+    PostReadersSerializer
 
 
 class RetrieveCreatePosts(ListCreateAPIView):
-    """List and Create a new Post"""
+    """List and Create a new Post, also allows search with URL. e.g http://example.com/posts/?search=React.
+    It also permits us to add ordering to the results, based on 'upvotes', 'views', 'created' hereby allowing us have
+    URL like http://sample.com/posts/?ordering=upvotes and same applies to the other fields that can be used for sorting.
+    created means the time of creation"""
     queryset = Post.objects.all().order_by('-created')
     serializer_class = CreatePostSerializer
     pagination_class = PostPagination
     permission_classes = (IsAuthenticatedOrReadOnly,)
+    filter_backends = (SearchFilter, OrderingFilter,)
+    filter_fields = ('title',)
+    ordering_fields = ('-upvotes', '-views', '-created',)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -36,6 +43,7 @@ class RetrieveUpdateDestroyPost(RetrieveUpdateDestroyAPIView):
 
 
 class ListCreateDestroyPostFollow(ListCreateAPIView, DestroyModelMixin):
+    """Follow and unfollow post"""
     serializer_class = PostFollowSerializer
     pagination_class = PostFollowPagination
     permission_classes = (IsAuthenticatedOrReadOnly,)
@@ -57,6 +65,7 @@ class ListCreateDestroyPostFollow(ListCreateAPIView, DestroyModelMixin):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user, post_id=self.kwargs.get('pk'))
+
 
 #
 # class ListCreatePostFollow(ListCreateAPIView):
@@ -87,6 +96,8 @@ class ListCreateDestroyPostFollow(ListCreateAPIView, DestroyModelMixin):
 
 
 class ListCreatePostComment(ListCreateAPIView):
+    """Create and list all comments of a particular post"""
+
     def get_queryset(self):
         return Comment.objects.filter(parent_post_id=self.kwargs.get('parent_post_id')).order_by('-created')
 
@@ -104,6 +115,8 @@ class ListCreatePostComment(ListCreateAPIView):
 
 
 class ListCreateCommentComment(ListCreateAPIView):
+    """List children comments of comment and also create child comment of comment"""
+
     def get_queryset(self):
         return Comment.objects.filter(parent_comment_id=self.kwargs.get('parent_comment_id'),
                                       parent_post_id=self.kwargs.get('parent_post_id')).order_by('-created')
@@ -124,6 +137,8 @@ class ListCreateCommentComment(ListCreateAPIView):
 
 
 class RetrieveUpdateDeleteComment(RetrieveUpdateDestroyAPIView):
+    """Retrieve Update and Delete a comment"""
+
     def get_queryset(self):
         return Comment.objects.filter(pk=self.kwargs.get('pk'))
 
@@ -133,6 +148,7 @@ class RetrieveUpdateDeleteComment(RetrieveUpdateDestroyAPIView):
 
 
 class ListCreatePostUpvote(ListCreateAPIView):
+    """List upvotes of a particular post and also Upvote and Unupvote same post"""
     serializer_class = PostUpvoteSerializer
     pagination_class = PostVotePagination
     permission_classes = (IsAuthenticated,)
@@ -162,6 +178,7 @@ class ListCreatePostUpvote(ListCreateAPIView):
 
 
 class ListCreatePostDownvote(ListCreateAPIView):
+    """List downvotes of a particular post and also Downvote and Undownvote same post"""
     serializer_class = PostDownvoteSerializer
     pagination_class = PostVotePagination
     permission_classes = (IsAuthenticated,)
@@ -194,6 +211,8 @@ class ListCreatePostDownvote(ListCreateAPIView):
 
 
 class ListCreateDeleteStarPost(ListCreateAPIView):
+    """List stars of a particular post and also star and unstar same post"""
+
     serializer_class = StarredPostSerializer
     pagination_class = StarredPostPagination
     permission_classes = (IsAuthenticated,)
@@ -225,6 +244,7 @@ class ListCreateDeleteStarPost(ListCreateAPIView):
 
 
 class ListCreateDeleteFlagPost(ListCreateAPIView):
+    """List flags of a particular post and also flag and unflag same post"""
     serializer_class = FlaggedPostSerializer
     pagination_class = FlaggedPostPagination
     permission_classes = (IsAuthenticated,)
@@ -256,6 +276,8 @@ class ListCreateDeleteFlagPost(ListCreateAPIView):
 
 
 class ListCreateDeleteStarComment(ListCreateAPIView):
+    """List stars of a particular comment and also star and unstar same comment"""
+
     serializer_class = StarredCommentSerializer
     pagination_class = StarredPostPagination
     permission_classes = (IsAuthenticated,)
@@ -287,6 +309,8 @@ class ListCreateDeleteStarComment(ListCreateAPIView):
 
 
 class ListCreateDeleteFlagComment(ListCreateAPIView):
+    """List flags of a particular comment and also flag and unflag same comment"""
+
     serializer_class = FlaggedCommentSerializer
     pagination_class = FlaggedPostPagination
     permission_classes = (IsAuthenticated,)
@@ -318,6 +342,8 @@ class ListCreateDeleteFlagComment(ListCreateAPIView):
 
 
 class ListCreateDeleteCommentUpvote(ListCreateAPIView):
+    """List upvotes of a particular comment and also upvote and unupvote same comment"""
+
     def get_serializer_class(self):
         if self.request.method == 'GET':
             return ListCommentUpvoteSerializer
@@ -335,6 +361,8 @@ class ListCreateDeleteCommentUpvote(ListCreateAPIView):
 
 
 class ListCreateDeleteCommentDownvote(ListCreateAPIView):
+    """List downvotes of a particular comment and also downvote and undownvote same comment"""
+
     serializer_class = CreateCommentDownvoteSerializer
     pagination_class = PostCommentPagination
     permission_classes = (IsAuthenticated,)
@@ -344,3 +372,23 @@ class ListCreateDeleteCommentDownvote(ListCreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+
+class MarkPostAsRead(ListCreateAPIView):
+    """List those that have read a post and also mark a post as read by the currently authenticated user"""
+
+    def post(self, request, *args, **kwargs):
+        # Check if the user has already been recorded to have read the post
+        rp = ReadPost.objects.filter(user=request.user, post_id=self.kwargs.get('pk'))
+
+        if not rp.exists():
+            ReadPost.objects.create(post_id=self.kwargs.get('pk'), user=request.user)
+
+        return Response(status=status.HTTP_201_CREATED)
+
+    def get_queryset(self):
+        return ReadPost.objects.filter(post_id=self.kwargs.get('pk')).order_by('-created')
+
+    serializer_class = PostReadersSerializer
+    permission_classes = (IsAuthenticated,)
+    pagination_class = PostPagination

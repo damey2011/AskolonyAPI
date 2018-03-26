@@ -10,6 +10,7 @@ urlpatterns = [
     path('<int:pk>/follow/', views.ListCreateDestroyPostFollow.as_view(), name='follow-post'),  # Accepts GET, POST, DELETE
     path('<int:pk>/star/', views.ListCreateDeleteStarPost.as_view(), name='star-post'),   # Accepts GET, POST, DELETE
     path('<int:pk>/flag/', views.ListCreateDeleteFlagPost.as_view(), name='flag-post'),   # Accepts GET, POST, DELETE
+    path('<int:pk>/read/', views.MarkPostAsRead.as_view(), name='mark-post-as-read'),
     path('<int:parent_post_id>/comment/', views.ListCreatePostComment.as_view(), name='list-create-post-comment'),
     path('<int:parent_post_id>/comment/<int:pk>/', views.RetrieveUpdateDeleteComment.as_view(), name='get-comment'),
     path('<int:parent_post_id>/comment/<int:parent_comment_id>/reply/', views.ListCreateCommentComment.as_view(), name='list-create-comment-comment'),

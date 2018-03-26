@@ -91,7 +91,9 @@ class GetUserStats(serializers.ModelSerializer):
 class RetrieveUpdateDeleteUserSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(source='get_full_name', read_only=True)
     profile = GetUserProfileSerializer()
-    stats = GetUserStats()
+    stats = GetUserStats(read_only=True)
+    followers = serializers.IntegerField(read_only=True)
+    followings = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = User
@@ -125,6 +127,10 @@ class RetrieveUpdateDeleteUserSerializer(serializers.ModelSerializer):
         instance.last_name = validated_data.get('last_name', instance.last_name)
         instance.bio = validated_data.get('bio', instance.bio)
         instance.username = validated_data.get('username', instance.username)
+
+        if instance.password:
+            instance.set_password(validated_data.get('password'))
+
         instance.save()
 
         profile.college = profile_data.get('college', profile.college)
@@ -148,6 +154,7 @@ class SimpleNoEmailUserSerializer(serializers.ModelSerializer):
             'first_name',
             'last_name',
             'full_name',
+            'picture',
             'username',
             'bio'
         )

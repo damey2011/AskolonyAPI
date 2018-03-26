@@ -38,7 +38,7 @@ class Post(models.Model):
 
     def save(self, *args, **kwargs):
         if self.pk is None:
-            self.slug = slugify(self.title + ' '.join(random.choices(string.ascii_uppercase + string.digits, k=5)))[:40]
+            self.slug = slugify(self.title + ' ' + ''.join(random.choices(string.ascii_lowercase + string.digits, k=5)))[:40]
         self.excerpt = reduce(lambda excerpt, next_item: excerpt + ' ' + next_item, self.content.split(' ')[:15])
         super(Post, self).save(*args, **kwargs)
 
@@ -150,3 +150,12 @@ class FlaggedComment(models.Model):
 
     def __str__(self):
         return "%s flagged %s" % (self.user.username, self.comment.parent_post.title)
+
+
+class ReadPost(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    post = models.ForeignKey(Post, on_delete=models.CASCADE)
+    created = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return "%s read %s" % (self.user.username, self.post.title)
