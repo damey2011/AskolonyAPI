@@ -12,7 +12,8 @@ urlpatterns = [
     path('user/me/posts-followed/', views.ListMyFollowedPosts.as_view(), name='list-my-followed-posts'),
     path('user/me/posts-starred/', views.ListMyStarredPosts.as_view(), name='list-my-starred-posts'),
     path('user/me/posts-upvoted/', views.ListMyUpvotedPosts.as_view(), name='list-my-upvoted-posts'),
-    path('user/me/posts-read/', views.ListMyReadPosts.as_view(), name='list-my-read-posts'),
+
+    path('user/my-stats/posts-read/', views.ListMyReadPosts.as_view(), name='list-my-read-posts'),
 
     path('user/me/feeds/', views.ListMyFeeds.as_view(), name='list-my-feeds'),
 

@@ -271,8 +271,8 @@ class ListMyReadPosts(ListAPIView):
             start = start.split('-')
             end = end.split('-')
 
-            start = datetime(start[0], start[1], start[2])
-            end = datetime(end[0], end[1], end[2])
+            start = datetime(int(start[0]), int(start[1]), int(start[2]))
+            end = datetime(int(end[0]), int(end[1]), int(end[2]))
 
             return ReadPost.objects.filter(created__gte=start, created__lte=end, user=self.request.user).order_by('-created')
 
