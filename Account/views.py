@@ -30,7 +30,7 @@ User = get_user_model()
 
 class CreateAccount(ListCreateAPIView):
     """Create new user account and list all users account"""
-    queryset = User.objects.all()
+    queryset = User.objects.all().order_by('-date_joined')
 
     # serializer_class = CreateUserSerializer
 

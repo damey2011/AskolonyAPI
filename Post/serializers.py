@@ -354,7 +354,7 @@ class PostReadersSerializer(serializers.ModelSerializer):
         )
 
     def to_representation(self, instance):
-        return SimpleNoEmailUserSerializer(instance.user).data
+        return SimpleNoEmailUserSerializer(instance.user, context=self.context).data
 
 
 class ReadPostsSerializer(serializers.ModelSerializer):

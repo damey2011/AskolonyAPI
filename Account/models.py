@@ -17,6 +17,9 @@ class User(AbstractUser):
     def __str__(self):
         return self.email
 
+    def is_following(self, user, is_following):
+        return UserFollowings.objects.filter(user=user, is_following=is_following).exists()
+
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, primary_key=True, on_delete=models.CASCADE, related_name='profile')

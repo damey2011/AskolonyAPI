@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django.db import connection
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
+from rest_framework.utils import json
 
 from Account.models import UserProfile, UserStats, UserFollowings
 
@@ -94,6 +95,8 @@ class RetrieveUpdateDeleteUserSerializer(serializers.ModelSerializer):
     stats = GetUserStats(read_only=True)
     followers = serializers.IntegerField(read_only=True)
     followings = serializers.IntegerField(read_only=True)
+    follows = serializers.SerializerMethodField()
+    follows_you = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -110,7 +113,9 @@ class RetrieveUpdateDeleteUserSerializer(serializers.ModelSerializer):
             'followings',
             'followers',
             'profile',
-            'stats'
+            'stats',
+            'follows',
+            'follows_you'
         )
 
         extra_kwargs = {
@@ -143,9 +148,23 @@ class RetrieveUpdateDeleteUserSerializer(serializers.ModelSerializer):
 
         return instance
 
+    def get_follows(self, obj):
+        current_user = self.context['request'].user
+        if current_user.is_authenticated:
+            return obj.is_following(current_user, obj)
+        return False
+
+    def get_follows_you(self, obj):
+        current_user = self.context['request'].user
+        if current_user.is_authenticated:
+            return obj.is_following(obj, current_user)
+        return False
+
 
 class SimpleNoEmailUserSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(source='get_full_name', read_only=True)
+    follows = serializers.SerializerMethodField()
+    follows_you = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -156,8 +175,22 @@ class SimpleNoEmailUserSerializer(serializers.ModelSerializer):
             'full_name',
             'picture',
             'username',
-            'bio'
+            'bio',
+            'follows',
+            'follows_you'
         )
+
+    def get_follows(self, obj):
+        current_user = self.context['request'].user
+        if current_user.is_authenticated:
+            return obj.is_following(current_user, obj)
+        return False
+
+    def get_follows_you(self, obj):
+        current_user = self.context['request'].user
+        if current_user.is_authenticated:
+            return obj.is_following(obj, current_user)
+        return False
 
 
 class FollowerSerializer(serializers.ModelSerializer):
@@ -170,7 +203,7 @@ class FollowerSerializer(serializers.ModelSerializer):
         )
 
     def to_representation(self, instance):
-        return SimpleNoEmailUserSerializer(instance.user).data
+        return SimpleNoEmailUserSerializer(instance.user, context=self.context).data
 
 
 class FollowingSerializer(serializers.ModelSerializer):
@@ -183,4 +216,4 @@ class FollowingSerializer(serializers.ModelSerializer):
         )
 
     def to_representation(self, instance):
-        return SimpleNoEmailUserSerializer(instance.is_following).data
+        return SimpleNoEmailUserSerializer(instance.is_following, context=self.context).data
