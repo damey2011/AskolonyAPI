@@ -93,8 +93,10 @@ class RetrieveUpdateDeleteUserSerializer(serializers.ModelSerializer):
     stats = GetUserStats(read_only=True)
     followers = serializers.IntegerField(read_only=True)
     followings = serializers.IntegerField(read_only=True)
-    follows = serializers.SerializerMethodField()
-    follows_you = serializers.SerializerMethodField()
+    follows = serializers.SerializerMethodField(read_only=True)
+    follows_you = serializers.SerializerMethodField(read_only=True)
+    picture = serializers.ImageField(read_only=True)
+    bio = serializers.CharField(read_only=True)
 
     class Meta:
         model = User
@@ -113,7 +115,8 @@ class RetrieveUpdateDeleteUserSerializer(serializers.ModelSerializer):
             'profile',
             'stats',
             'follows',
-            'follows_you'
+            'follows_you',
+            'website'
         )
 
         extra_kwargs = {
@@ -130,8 +133,11 @@ class RetrieveUpdateDeleteUserSerializer(serializers.ModelSerializer):
         instance.last_name = validated_data.get('last_name', instance.last_name)
         instance.bio = validated_data.get('bio', instance.bio)
         instance.username = validated_data.get('username', instance.username)
+        instance.website = validated_data.get('website', instance.website)
 
-        if instance.password:
+        password = validated_data.pop('password', None)
+
+        if password is not None and password != '':
             instance.set_password(validated_data.get('password'))
 
         instance.save()

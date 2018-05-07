@@ -8,7 +8,7 @@ from rest_framework.authtoken.models import Token
 class User(AbstractUser):
     email = models.EmailField(unique=True)
     bio = models.TextField()
-    website = models.URLField(max_length=1000, default='http://')
+    website = models.URLField(max_length=1000, default='http://', blank=True)
     picture = models.ImageField(upload_to='user-images', default='/default/user.png')
     followings = models.IntegerField(default=0)
     followers = models.IntegerField(default=0)
