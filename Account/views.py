@@ -43,7 +43,7 @@ class CreateAccount(ListCreateAPIView):
     pagination_class = FollowerPagination
 
 
-class RetrieveUpdateDeleteUser(RetrieveUpdateDestroyAPIView):
+class   RetrieveUpdateDeleteUser(RetrieveUpdateDestroyAPIView):
     """Retrieve Update and Delete user. \n The profile is a dictionary that accepts fields ''college',
             'works', 'lives', 'facebook_link', 'twitter_link', 'linked_in_profile' which are all optional"""
     queryset = User.objects.all()

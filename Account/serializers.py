@@ -1,10 +1,8 @@
 import uuid
 
 from django.contrib.auth import get_user_model
-from django.db import connection
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from rest_framework.utils import json
 
 from Account.models import UserProfile, UserStats, UserFollowings
 
@@ -149,15 +147,15 @@ class RetrieveUpdateDeleteUserSerializer(serializers.ModelSerializer):
         return instance
 
     def get_follows(self, obj):
-        current_user = self.context['request'].user
-        if current_user.is_authenticated:
-            return obj.is_following(current_user, obj)
+        request = self.context.get('request', None)
+        if request and request.user.is_authenticated:
+            return obj.is_following(request.user, obj)
         return False
 
     def get_follows_you(self, obj):
-        current_user = self.context['request'].user
-        if current_user.is_authenticated:
-            return obj.is_following(obj, current_user)
+        request = self.context.get('request', None)
+        if request and request.user.is_authenticated:
+            return obj.is_following(obj, request.user)
         return False
 
 
@@ -181,15 +179,15 @@ class SimpleNoEmailUserSerializer(serializers.ModelSerializer):
         )
 
     def get_follows(self, obj):
-        current_user = self.context['request'].user
-        if current_user.is_authenticated:
-            return obj.is_following(current_user, obj)
+        request = self.context.get('request', None)
+        if request and request.user.is_authenticated:
+            return obj.is_following(request.user, obj)
         return False
 
     def get_follows_you(self, obj):
-        current_user = self.context['request'].user
-        if current_user.is_authenticated:
-            return obj.is_following(obj, current_user)
+        request = self.context.get('request', None)
+        if request and request.user.is_authenticated:
+            return obj.is_following(obj, request.user)
         return False
 
 
