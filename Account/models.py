@@ -8,6 +8,7 @@ from rest_framework.authtoken.models import Token
 class User(AbstractUser):
     email = models.EmailField(unique=True)
     bio = models.TextField()
+    website = models.URLField(max_length=1000, default='http://')
     picture = models.ImageField(upload_to='user-images', default='/default/user.png')
     followings = models.IntegerField(default=0)
     followers = models.IntegerField(default=0)
@@ -23,11 +24,11 @@ class User(AbstractUser):
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, primary_key=True, on_delete=models.CASCADE, related_name='profile')
-    college = models.CharField(max_length=50, blank=True, default='NA')
-    works = models.CharField(max_length=100, blank=True, default='NA')
-    lives = models.CharField(max_length=50, blank=True, default='NA')
-    facebook_link = models.URLField(max_length=100, blank=True, default='http://facebook.com')
-    twitter_link = models.URLField(max_length=100, blank=True, default='http://twitter.com')
+    college = models.CharField(max_length=200, blank=True, default='NA')
+    works = models.CharField(max_length=200, blank=True, default='NA')
+    lives = models.CharField(max_length=400, blank=True, default='NA')
+    facebook_link = models.URLField(max_length=1000, blank=True, default='http://facebook.com')
+    twitter_link = models.URLField(max_length=1000, blank=True, default='http://twitter.com')
     linked_in_profile = models.URLField(max_length=100, blank=True, default='http://linkedin.com')
 
     def __str__(self):
