@@ -49,7 +49,7 @@ class CreatePostSerializer(serializers.ModelSerializer):
     def get_user(self, obj):
         if obj.is_anonymous:
             return "Anonymous"
-        return RetrieveUpdateDeleteUserSerializer(obj.user).data
+        return RetrieveUpdateDeleteUserSerializer(obj.user, context=self.context).data
 
 
 class RetrieveUpdateDestroyPostSerializer(serializers.ModelSerializer):
@@ -95,7 +95,7 @@ class RetrieveUpdateDestroyPostSerializer(serializers.ModelSerializer):
     def get_user(self, obj):
         if obj.is_anonymous:
             return "Anonymous"
-        return RetrieveUpdateDeleteUserSerializer(obj.user).data
+        return RetrieveUpdateDeleteUserSerializer(obj.user, context=self.context).data
 
 
 class PostFollowSerializer(serializers.ModelSerializer):
@@ -119,7 +119,7 @@ class PostFollowSerializer(serializers.ModelSerializer):
         }
 
     def get_user(self, obj):
-        return RetrieveUpdateDeleteUserSerializer(obj.user).data
+        return RetrieveUpdateDeleteUserSerializer(obj.user, context=self.context).data
 
 
 class ListCommentSerializer(serializers.ModelSerializer):
@@ -137,7 +137,7 @@ class ListCommentSerializer(serializers.ModelSerializer):
         )
 
     def get_user(self, obj):
-        return RetrieveUpdateDeleteUserSerializer(obj.user).data
+        return RetrieveUpdateDeleteUserSerializer(obj.user, context=self.context).data
 
 
 class CreateCommentSerializer(serializers.ModelSerializer):
@@ -160,16 +160,16 @@ class CreateCommentSerializer(serializers.ModelSerializer):
 
     def get_parent_post(self, obj):
         if obj.parent_post is not None:
-            return RetrieveUpdateDestroyPostSerializer(obj.parent_post).data
+            return RetrieveUpdateDestroyPostSerializer(obj.parent_post, context=self.context).data
         return None
 
     def get_parent_comment(self, obj):
         if obj.parent_comment is not None:
-            return ListCommentSerializer(obj.parent_comment).data
+            return ListCommentSerializer(obj.parent_comment, context=self.context).data
         return None
 
     def get_user(self, obj):
-        return RetrieveUpdateDeleteUserSerializer(obj.user).data
+        return RetrieveUpdateDeleteUserSerializer(obj.user, context=self.context).data
 
 
 class PostUpvoteSerializer(serializers.ModelSerializer):
@@ -248,7 +248,7 @@ class ListCommentUpvoteSerializer(serializers.ModelSerializer):
         )
 
     def to_representation(self, instance):
-        return RetrieveUpdateDeleteUserSerializer(instance.user).data
+        return RetrieveUpdateDeleteUserSerializer(instance.user, context=self.context).data
 
 
 class StarredCommentSerializer(serializers.ModelSerializer):
@@ -305,7 +305,7 @@ class MyFollowedPostsSerializer(serializers.ModelSerializer):
         )
 
     def to_representation(self, instance):
-        return RetrieveUpdateDestroyPostSerializer(instance.post).data
+        return RetrieveUpdateDestroyPostSerializer(instance.post, context=self.context).data
 
 
 class MyStarredPostsSerializer(serializers.ModelSerializer):
@@ -316,7 +316,7 @@ class MyStarredPostsSerializer(serializers.ModelSerializer):
         )
 
     def to_representation(self, instance):
-        return RetrieveUpdateDestroyPostSerializer(instance.post).data
+        return RetrieveUpdateDestroyPostSerializer(instance.post, context=self.context).data
 
 
 class MyUpvotedPostsSerializer(serializers.ModelSerializer):
@@ -327,7 +327,7 @@ class MyUpvotedPostsSerializer(serializers.ModelSerializer):
         )
 
     def to_representation(self, instance):
-        return RetrieveUpdateDestroyPostSerializer(instance.post).data
+        return RetrieveUpdateDestroyPostSerializer(instance.post, context=self.context).data
 
 
 class MyUpvotedCommentsSerializer(serializers.ModelSerializer):
@@ -338,7 +338,7 @@ class MyUpvotedCommentsSerializer(serializers.ModelSerializer):
         )
 
     def to_representation(self, instance):
-        return ListCommentSerializer(instance.comment).data
+        return ListCommentSerializer(instance.comment, context=self.context).data
 
 
 class PostReadersSerializer(serializers.ModelSerializer):
@@ -371,4 +371,4 @@ class ReadPostsSerializer(serializers.ModelSerializer):
         )
 
     def to_representation(self, instance):
-        return RetrieveUpdateDestroyPostSerializer(instance.post).data
+        return RetrieveUpdateDestroyPostSerializer(instance.post, context=self.context).data

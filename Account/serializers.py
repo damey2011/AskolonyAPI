@@ -109,6 +109,7 @@ class RetrieveUpdateDeleteUserSerializer(serializers.ModelSerializer):
             'password',
             'username',
             'bio',
+            'header_image',
             'picture',
             'followings',
             'followers',
@@ -116,6 +117,8 @@ class RetrieveUpdateDeleteUserSerializer(serializers.ModelSerializer):
             'stats',
             'follows',
             'follows_you',
+            'topics_followed_count',
+            'starred_posts_count',
             'website'
         )
 
@@ -178,6 +181,7 @@ class SimpleNoEmailUserSerializer(serializers.ModelSerializer):
             'last_name',
             'full_name',
             'picture',
+            'header_image',
             'username',
             'bio',
             'follows',

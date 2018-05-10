@@ -1,17 +1,19 @@
 from rest_framework import status
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView, ListAPIView
 from rest_framework.mixins import DestroyModelMixin
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 
+from Post.models import PostTopic
+from Post.paginations import PostPagination
 from Topic.models import Topic, TopicFollowing
 from Topic.pagination import TopicPagination
-from Topic.serializers import TopicSerializer, TopicFollowSerializer
+from Topic.serializers import TopicSerializer, TopicFollowSerializer, TopicPostSerializer
 
 
 class ListCreateTopic(ListCreateAPIView):
     """Create and list all topics"""
-    queryset = Topic.objects.all()
+    queryset = Topic.objects.all().order_by('-created')
     serializer_class = TopicSerializer
     pagination_class = TopicPagination
     permission_classes = (IsAuthenticatedOrReadOnly,)
@@ -23,7 +25,7 @@ class ListCreateTopic(ListCreateAPIView):
 class RetrieveUpdateDeleteTopic(RetrieveUpdateDestroyAPIView):
     """Retrieve Update and Delete Topic"""
     serializer_class = TopicSerializer
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticatedOrReadOnly,)
 
     def get_queryset(self):
         return Topic.objects.filter(pk=self.kwargs.get('pk'))
@@ -36,7 +38,7 @@ class ListCreateDestroyFollowTopic(ListCreateAPIView, DestroyModelMixin):
     permission_classes = (IsAuthenticatedOrReadOnly,)
 
     def get_queryset(self):
-        return TopicFollowing.objects.filter(user=self.request.user, topic_id=self.kwargs.get('pk'))
+        return TopicFollowing.objects.filter(topic_id=self.kwargs.get('pk')).order_by('-created')
 
     def delete(self, request, *args, **kwargs):
         topic_id = self.kwargs.get('pk')
@@ -51,3 +53,14 @@ class ListCreateDestroyFollowTopic(ListCreateAPIView, DestroyModelMixin):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user, topic_id=self.kwargs.get('pk'))
+
+
+class ListTopicPosts(ListCreateAPIView):
+    def get_queryset(self):
+        return PostTopic.objects.filter(topic_id=self.kwargs.get('pk')).order_by('-created')
+
+    serializer_class = TopicPostSerializer
+    pagination_class = PostPagination
+
+    def perform_create(self, serializer):
+        serializer.save(topic_id=self.kwargs.get('pk'), created_by=self.request.user)

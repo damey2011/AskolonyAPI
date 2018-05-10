@@ -20,7 +20,7 @@ from Post.paginations import PostPagination, PostCommentPagination
 from Post.serializers import CreatePostSerializer, StarredCommentSerializer, \
     MyFollowedPostsSerializer, MyStarredPostsSerializer, MyUpvotedPostsSerializer, MyUpvotedCommentsSerializer, \
     ListCommentSerializer, ReadPostsSerializer
-from Topic.models import Topic
+from Topic.models import Topic, TopicFollowing
 from Topic.pagination import TopicPagination
 from Topic.serializers import TopicSerializer, TopicFollowedByUserSerializer
 
@@ -181,6 +181,16 @@ class ListMyFollowedTopics(ListAPIView):
     serializer_class = TopicFollowedByUserSerializer
     pagination_class = TopicPagination
     permission_classes = (IsAuthenticated,)
+
+
+class ListUserFollowedTopics(ListAPIView):
+    """These are the topics followed by a user"""
+
+    def get_queryset(self):
+        return TopicFollowing.objects.filter(user_id=self.kwargs.get('pk')).order_by('-created')
+
+    serializer_class = TopicFollowedByUserSerializer
+    pagination_class = TopicPagination
 
 
 class ListMyComments(ListAPIView):

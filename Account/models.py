@@ -4,11 +4,15 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
 
+from Post.models import StarredPost
+from Topic.models import TopicFollowing
+
 
 class User(AbstractUser):
     email = models.EmailField(unique=True)
     bio = models.TextField()
     website = models.URLField(max_length=1000, default='http://', blank=True)
+    header_image = models.ImageField(upload_to='user-header-images', default='/default/post-header.png')
     picture = models.ImageField(upload_to='user-images', default='/default/user.png')
     followings = models.IntegerField(default=0)
     followers = models.IntegerField(default=0)
@@ -20,6 +24,12 @@ class User(AbstractUser):
 
     def is_following(self, user, is_following):
         return UserFollowings.objects.filter(user=user, is_following=is_following).exists()
+
+    def topics_followed_count(self):
+        return TopicFollowing.objects.filter(user=self).count()
+
+    def starred_posts_count(self):
+        return StarredPost.objects.filter(user=self).count()
 
 
 class UserProfile(models.Model):

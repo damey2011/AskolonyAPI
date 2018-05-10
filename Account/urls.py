@@ -32,4 +32,5 @@ urlpatterns = [
     path('user/<slug:username>/follow/', views.CreateFollowing.as_view(), name='follow-user'),  # accepts POST and DELETE
     path('user/<slug:username>/followers/', views.ListFollowers.as_view(), name='list-user-followers'),
     path('user/<slug:username>/followings/', views.ListFollowings.as_view(), name='list-user-followings'),
+    path('user/<slug:username>/topics-followed/', views.ListUserFollowedTopics.as_view(), name='list-user-followed-topics'),
 ]
