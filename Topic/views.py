@@ -22,6 +22,16 @@ class ListCreateTopic(ListCreateAPIView):
         serializer.save(created_by=self.request.user)
 
 
+class ListTopicsToFollow(ListAPIView):
+    def get_queryset(self):
+        if self.request.user.is_authenticated:
+            return Topic.objects.exclude(pk__in=TopicFollowing.objects.filter(user=self.request.user).values_list('topic', flat=True)).order_by('?')
+        return Topic.objects.all().order_by('?')
+
+    serializer_class = TopicSerializer
+    pagination_class = TopicPagination
+
+
 class RetrieveUpdateDeleteTopic(RetrieveUpdateDestroyAPIView):
     """Retrieve Update and Delete Topic"""
     serializer_class = TopicSerializer

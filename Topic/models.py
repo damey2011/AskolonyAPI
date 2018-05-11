@@ -44,4 +44,4 @@ class TopicFollowing(models.Model):
     created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.user.user.first_name + ' FOLLOWS ' + self.topic.name
+        return self.user.first_name + ' FOLLOWS ' + self.topic.name

@@ -18,6 +18,9 @@ class Poll(models.Model):
     def __str__(self):
         return self.title
 
+    def already_voted(self, user):
+        return UserPolled.objects.filter(user=user, poll=self).exists()
+
 
 class PollOption(models.Model):
     poll = models.ForeignKey(Poll, on_delete=models.CASCADE, related_name='options')

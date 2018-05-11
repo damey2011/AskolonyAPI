@@ -6,6 +6,7 @@ from Account import views
 urlpatterns = [
     path('get_auth_token/', rest_framework_views.obtain_auth_token, name='get_auth_token'),
     path('user/', views.CreateAccount.as_view(), name='sign-up'),
+    path('user/explore/', views.ListExploreAccount.as_view(), name='explore-users'),
 
     # All Private and populated with the request.user object
     path('user/me/', views.RetrieveUpdateDeleteMe.as_view(), name='get-me'),

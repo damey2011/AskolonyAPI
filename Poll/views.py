@@ -1,6 +1,6 @@
 from django.http import Http404
 from rest_framework import status
-from rest_framework.generics import ListCreateAPIView, DestroyAPIView
+from rest_framework.generics import ListCreateAPIView, DestroyAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -20,6 +20,17 @@ class ListCreatePoll(ListCreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+
+class ListExplorePoll(ListAPIView):
+    """List polls that user has not voted in"""
+    def get_queryset(self):
+        if self.request.user.is_authenticated:
+            return Poll.objects.filter(is_public=True).exclude(pk__in=UserPolled.objects.filter(user=self.request.user).values_list('user', flat=True)).order_by('?')
+        return Poll.objects.all()
+
+    serializer_class = PollSerializer
+    pagination_class = PollPagination
 
 
 class RetrieveDestroyPoll(DestroyAPIView):

@@ -66,8 +66,11 @@ class TopicFollowedByUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = TopicFollowing
         fields = (
-            'topic'
+            'topic',
         )
+
+    def to_representation(self, instance):
+        return TopicSerializer(instance.topic, context=self.context).data
 
 
 class TopicPostSerializer(serializers.ModelSerializer):

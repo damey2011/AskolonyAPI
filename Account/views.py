@@ -43,6 +43,18 @@ class CreateAccount(ListCreateAPIView):
     pagination_class = FollowerPagination
 
 
+class ListExploreAccount(ListAPIView):
+    def get_queryset(self):
+        if self.request.user.is_authenticated:
+            return User.objects.exclude(
+                pk__in=UserFollowings.objects.filter(user=self.request.user).values_list('is_following', flat=True))\
+                .exclude(pk=self.request.user.pk).order_by('?')
+        return User.objects.all().order_by('?')
+
+    serializer_class = RetrieveUpdateDeleteUserSerializer
+    pagination_class = FollowerPagination
+
+
 class   RetrieveUpdateDeleteUser(RetrieveUpdateDestroyAPIView):
     """Retrieve Update and Delete user. \n The profile is a dictionary that accepts fields ''college',
             'works', 'lives', 'facebook_link', 'twitter_link', 'linked_in_profile' which are all optional"""
@@ -187,7 +199,7 @@ class ListUserFollowedTopics(ListAPIView):
     """These are the topics followed by a user"""
 
     def get_queryset(self):
-        return TopicFollowing.objects.filter(user_id=self.kwargs.get('pk')).order_by('-created')
+        return TopicFollowing.objects.filter(user__username=self.kwargs.get('username')).order_by('-created')
 
     serializer_class = TopicFollowedByUserSerializer
     pagination_class = TopicPagination
