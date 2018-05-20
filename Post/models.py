@@ -9,6 +9,7 @@ from django.urls import reverse
 from django.utils.text import slugify
 
 from AskolonyAPI import settings
+from Post.utils import remove_tags
 
 
 class Post(models.Model):
@@ -40,7 +41,7 @@ class Post(models.Model):
         if self.pk is None:
             self.slug = slugify(
                 self.title + ' ' + ''.join(random.choices(string.ascii_lowercase + string.digits, k=5)))[:40]
-        self.excerpt = reduce(lambda excerpt, next_item: excerpt + ' ' + next_item, self.content.split(' ')[:15])
+        self.excerpt = reduce(lambda excerpt, next_item: excerpt + ' ' + next_item, remove_tags(self.content).split(' ')[:15])
         super(Post, self).save(*args, **kwargs)
 
 

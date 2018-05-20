@@ -86,3 +86,5 @@ class UserFollowings(models.Model):
             return True
         else:
             return False
+
+

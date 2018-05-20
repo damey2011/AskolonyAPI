@@ -3,7 +3,7 @@ from datetime import datetime
 from django.contrib.auth import get_user_model
 from django.http import JsonResponse
 from rest_framework import status
-from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListAPIView, ListCreateAPIView
+from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListAPIView, ListCreateAPIView, UpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -55,7 +55,7 @@ class ListExploreAccount(ListAPIView):
     pagination_class = FollowerPagination
 
 
-class   RetrieveUpdateDeleteUser(RetrieveUpdateDestroyAPIView):
+class RetrieveUpdateDeleteUser(RetrieveUpdateDestroyAPIView):
     """Retrieve Update and Delete user. \n The profile is a dictionary that accepts fields ''college',
             'works', 'lives', 'facebook_link', 'twitter_link', 'linked_in_profile' which are all optional"""
     queryset = User.objects.all()
@@ -78,6 +78,23 @@ class RetrieveUpdateDeleteMe(RetrieveUpdateDestroyAPIView):
 
     def get_object(self):
         return self.request.user
+
+
+class UpdateMyPhoto(UpdateAPIView):
+    """Updates the user profile picture and returns the new comprehensive user object, also update the header image through
+    same endpoint, by adding the URL parameter 'header_image=true'"""
+    def post(self, request, *args, **kwargs):
+        photo = request.data.get('picture', None)
+        is_header_photo = request.GET.get('header_image', None)
+        if photo:
+            if not is_header_photo:
+                request.user.picture = photo
+            else:
+                request.user.header_image = photo
+            request.user.save()
+        return Response(RetrieveUpdateDeleteUserSerializer(request.user, context=self.get_serializer_context()).data, status=status.HTTP_201_CREATED)
+
+    permission_classes = (IsAuthenticated,)
 
 
 class CreateFollowing(APIView):

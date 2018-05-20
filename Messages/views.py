@@ -1,10 +1,11 @@
 from django.contrib.auth import get_user_model
 from django.db.models import Q
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from rest_framework import status
 from rest_framework.generics import ListAPIView, CreateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from Messages.models import Message, Conversation
 from Messages.paginations import MessageThreadPagination
@@ -25,7 +26,7 @@ class AllConversations(ListAPIView):
         ).distinct('conversation').order_by('-conversation_id', '-created')
 
     serializer_class = MessageThreadSerializer
-    pagination_class = MessageThreadPagination
+    # pagination_class = MessageThreadPagination
     permission_classes = (IsAuthenticated,)
 
 
@@ -33,10 +34,10 @@ class ConversationMessages(ListAPIView):
     """List and also create messages of a particular thread """
 
     def get_queryset(self):
-        return Message.objects.filter(conversation_id=self.kwargs.get('pk')).order_by('-created')
+        return Message.objects.filter(conversation_id=self.kwargs.get('pk')).order_by('created')
 
     serializer_class = MessageSerializer
-    pagination_class = MessageThreadPagination
+    # pagination_class = MessageThreadPagination
     permission_classes = (IsAuthenticated,)
 
 
@@ -73,3 +74,25 @@ class SendMessage(CreateAPIView):
                                              conversation_id=new_conversation.id)
 
         return Response(MessageSerializer(message).data, status=status.HTTP_201_CREATED)
+
+
+class MarkMessageAsRead(APIView):
+    def post(self, request, pk):
+        ms = Message.objects.filter(conversation_id=pk, recipient=request.user, read=False)
+        for m in ms:
+            m.read = True
+            m.save()
+        return JsonResponse({'status': True}, safe=False, status=201)
+
+    permission_classes = (IsAuthenticated,)
+
+
+class MarkAllMessageAsRead(APIView):
+    def post(self, request):
+        ms = Message.objects.filter(recipient=request.user, read=False)
+        for m in ms:
+            m.read = True
+            m.save()
+        return JsonResponse({'status': True}, safe=False, status=201)
+
+    permission_classes = (IsAuthenticated,)

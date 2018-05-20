@@ -1,16 +1,18 @@
+from django.http import JsonResponse
 from rest_framework import status
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.utils import json
 from rest_framework.views import APIView
 
-from Notification.models import Notification
+from Notification.models import Notification, NotificationCass
 from Notification.paginations import NotificationPagination
 from Notification.permissions import IsNotificationOwner
-from Notification.serializers import NotificationSerializer
+from Notification.serializers import NotificationSerializer, NotificationCassSerializer
 
 
-class AllNotifications(ListAPIView):
+class AllNotifications__(ListAPIView):
     """List all the currently authenticated user's notifications"""
     def get_queryset(self):
         return Notification.objects.filter(owner=self.request.user).order_by('-created')
@@ -20,10 +22,25 @@ class AllNotifications(ListAPIView):
     permission_classes = (IsAuthenticated,)
 
 
+class AllNotifications(ListAPIView):
+    def get_queryset(self):
+        return NotificationCass.objects(NotificationCass.owner == str(self.request.user.id))
+
+    serializer_class = NotificationCassSerializer
+    pagination_class = NotificationPagination
+    permission_classes = (IsAuthenticated,)
+
+
+# class AllNotifications____(APIView):
+#     def get(self, request):
+#         nfs = NotificationCass.objects(NotificationCass.owner == str(request.user.id))
+#         return JsonResponse(NotificationCassSerializer(nfs, many=True).data, safe=False)
+
+
 class MarkAllNotificationsAsRead(APIView):
     """Mark all the currently authenticated user's notifications as read"""
     def post(self, request):
-        n = Notification.objects.filter(owner=self.request.user, read=False)
+        n = NotificationCass.objects(NotificationCass.owner == str(self.request.user.id), read=False)
         for note in n:
             note.read = True
             note.save()

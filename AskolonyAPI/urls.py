@@ -23,6 +23,8 @@ from AskolonyAPI import settings
 
 schema_view = get_swagger_view("Askolony API Documentation")
 
+admin.site.site_header = 'Askolony Admin'
+
 urlpatterns = [
     url(r'^docs/', schema_view),
     url(r'^admin/', admin.site.urls),

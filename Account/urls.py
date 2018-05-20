@@ -10,6 +10,7 @@ urlpatterns = [
 
     # All Private and populated with the request.user object
     path('user/me/', views.RetrieveUpdateDeleteMe.as_view(), name='get-me'),
+    path('user/me/photo/', views.UpdateMyPhoto.as_view(), name='update-my-photo'),
     path('user/me/posts-followed/', views.ListMyFollowedPosts.as_view(), name='list-my-followed-posts'),
     path('user/me/posts-starred/', views.ListMyStarredPosts.as_view(), name='list-my-starred-posts'),
     path('user/me/posts-upvoted/', views.ListMyUpvotedPosts.as_view(), name='list-my-upvoted-posts'),

@@ -95,7 +95,7 @@ class RetrieveUpdateDeleteUserSerializer(serializers.ModelSerializer):
     followings = serializers.IntegerField(read_only=True)
     follows = serializers.SerializerMethodField(read_only=True)
     follows_you = serializers.SerializerMethodField(read_only=True)
-    picture = serializers.ImageField(read_only=True)
+    picture = serializers.ImageField(read_only=True, required=False)
     bio = serializers.CharField(read_only=True)
 
     class Meta:
@@ -129,6 +129,7 @@ class RetrieveUpdateDeleteUserSerializer(serializers.ModelSerializer):
         }
 
     def update(self, instance, validated_data):
+        print(validated_data)
         profile_data = validated_data.pop('profile')
         profile = instance.profile
 
@@ -225,3 +226,17 @@ class FollowingSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         return SimpleNoEmailUserSerializer(instance.is_following, context=self.context).data
+
+
+class UserNotificationSerializer(serializers.ModelSerializer):
+    full_name = serializers.CharField(source='get_full_name', read_only=True)
+    id = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = User
+        fields = (
+            'id',
+            'full_name',
+            'picture',
+            'username',
+        )

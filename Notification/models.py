@@ -1,8 +1,11 @@
+import uuid
+
+import datetime
 from django.db import models
 
-# Create your models here.
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django_cassandra_engine.models import DjangoCassandraModel, columns
 
 from Account.models import UserFollowings
 from AskolonyAPI import settings
@@ -58,15 +61,16 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
                                     thumbnail=ref.picture)
 
 
-@receiver(post_save, sender=Message)
-def create_auth_token(sender, instance=None, created=False, **kwargs):
-    if created:
-        owner = instance.recipient
-        ref = instance.conversation_id
-        sender = instance.sender
-        Notification.objects.create(note_type='NM',
-                                    owner=owner,
-                                    object_ref=ref,
-                                    object_type='M',
-                                    text='%s sent you a message' % sender.get_full_name(),
-                                    thumbnail=sender.picture)
+class NotificationCass(DjangoCassandraModel):
+    id = columns.UUID(primary_key=True, default=uuid.uuid4())
+    note_type = columns.Text(max_length=50, primary_key=True)
+    owner = columns.Integer(primary_key=True)
+    actor = columns.Map(key_type=columns.Text(), value_type=columns.Text())
+    verb = columns.Text()
+    action_object = columns.Map(key_type=columns.Text(), value_type=columns.Text(), default=None)
+    target = columns.Map(key_type=columns.Text(), value_type=columns.Text())
+    read = columns.Boolean(default=False)
+    created = columns.DateTime(default=datetime.datetime.now())
+
+    class Meta:
+        get_pk_field = 'id'

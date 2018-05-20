@@ -9,7 +9,7 @@ class Conversation(models.Model):
     created = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.id
+        return self.starter.get_full_name()
 
 
 class Message(models.Model):
@@ -22,3 +22,4 @@ class Message(models.Model):
 
     def __str__(self):
         return self.text
+
