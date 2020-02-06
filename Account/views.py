@@ -12,7 +12,7 @@ from Account.models import UserFollowings
 from Account.paginations import FollowerPagination
 from Account.permissions import IsProfileOwnerOrReadOnly, IsOwnerOrReadOnly
 from Account.serializers import CreateUserSerializer, RetrieveUpdateDeleteUserSerializer, FollowerSerializer, \
-    FollowingSerializer
+    FollowingSerializer, UpdatePhotoSerializer
 from Poll.pagination import PollPagination
 from Poll.serializers import PollSerializer
 from Post.models import Post, ReadPost
@@ -82,19 +82,23 @@ class RetrieveUpdateDeleteMe(RetrieveUpdateDestroyAPIView):
 
 class UpdateMyPhoto(UpdateAPIView):
     """Updates the user profile picture and returns the new comprehensive user object, also update the header image through
-    same endpoint, by adding the URL parameter 'header_image=true'"""
-    def post(self, request, *args, **kwargs):
+    same endpoint, by adding the URL parameter 'header_image=true', only payload required is 'picture'"""
+    permission_classes = (IsAuthenticated,)
+    serializer_class = UpdatePhotoSerializer
+
+    def update(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
         photo = request.data.get('picture', None)
         is_header_photo = request.GET.get('header_image', None)
+        user = self.request.user
         if photo:
             if not is_header_photo:
                 request.user.picture = photo
             else:
                 request.user.header_image = photo
-            request.user.save()
-        return Response(RetrieveUpdateDeleteUserSerializer(request.user, context=self.get_serializer_context()).data, status=status.HTTP_201_CREATED)
-
-    permission_classes = (IsAuthenticated,)
+            user = request.user.save()
+        return Response(self.serializer_class(instance=user).data, status=status.HTTP_200_OK)
 
 
 class CreateFollowing(APIView):

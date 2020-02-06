@@ -240,3 +240,10 @@ class UserNotificationSerializer(serializers.ModelSerializer):
             'picture',
             'username',
         )
+
+
+class UpdatePhotoSerializer(serializers.Serializer):
+    picture = serializers.ImageField(allow_null=False)
+
+    def to_representation(self, instance):
+        return SimpleNoEmailUserSerializer(instance=instance).data
