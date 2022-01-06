@@ -1,5 +1,5 @@
 cassandra-driver==3.13.0
-celery==3.1.25
+celery==5.2.2
 Django==2.0.1
 django-cassandra-engine==1.4.0
 django-celery==3.2.1
